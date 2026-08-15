@@ -111,7 +111,6 @@ video{background:#000;display:block}
 
 footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);
   font-size:13px;color:var(--steel)}
-footer a{color:var(--sawdust)}
 
 @media (max-width:560px){
   .clocks{margin-left:0;width:100%;justify-content:flex-start}
@@ -133,6 +132,7 @@ footer a{color:var(--sawdust)}
 
 <div class="livebar">
   <div class="onair off" id="onair"><span class="dot"></span><span id="onairtext">Stream offline</span></div>
+  <div id="gamelabel" style="font-family:'Roboto Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)"></div>
   <div class="clocks">
     <div class="clock"><div class="zone">Jamestown</div><div class="time" id="clockET">--:--</div></div>
     <div class="clock"><div class="zone">Ridgefield</div><div class="time" id="clockPT">--:--</div></div>
@@ -149,17 +149,13 @@ footer a{color:var(--sawdust)}
   </div>
   <div class="stagenote">
     <span id="status" style="font-family:'Roboto Mono',monospace;color:var(--sawdust)">Starting up...</span>
-    <span>Stream provided by JockJive Sports Network.</span>
-    <span><a href="https://www.jockjive.com/baberuthny26.html" target="_blank" rel="noopener">Open the game on JockJive &rarr;</a></span>
+    <span>Stream by JockJive Sports Network.</span><button id="refresh" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--sawdust);border-radius:3px;padding:5px 12px;font:500 12px Inter,sans-serif;cursor:pointer">Refresh</button>
   </div>
 </div>
 
 
 
-<footer>
-  Go Lumberjacks. Questions about the stream, text the team thread.
-  <a href="./index.html">Back to the family hub</a>
-</footer>
+<footer>Go Lumberjacks.</footer>
 
 </div>
 
@@ -169,13 +165,13 @@ footer a{color:var(--sawdust)}
    ================================================================ */
 
 // How the stream is delivered. Two options:
-//   'iframe' — JockJive gave you an embed URL or an <iframe src="...">
 //   'hls'    — you grabbed a .m3u8 link from the Network tab
-const STREAM_TYPE = 'iframe';
+
 
 // Hudl embed. For a NEW GAME, swap the number (4151108) for that game's
 // broadcast ID. Everything else in the URL stays the same.
-const STREAM_URL = 'https://vcloud.hudl.com/broadcast/embed/4151108?autoplay=1';
+// Fallback only. The page reads live.json first; edit THAT file to change games.
+const DEFAULT_ID = '4151108';
 
 // Where people go if the embed fails. Put the direct JockJive game page here.
 const JOCKJIVE_PAGE = 'https://www.jockjive.com/baberuthny26.html';
@@ -197,87 +193,35 @@ const GAMES = [
 const stage = document.getElementById('stage');
 const setup = document.getElementById('setup');
 document.getElementById('fallbackBtn').href = JOCKJIVE_PAGE;
-document.querySelectorAll('.stagenote a').forEach(a => a.href = JOCKJIVE_PAGE);
 
 function say(msg){
   const el = document.getElementById('status');
   if(el) el.textContent = msg;
 }
 
-function mountStream(){
-  if(!STREAM_URL){ say('Live on JockJive.'); return false; }
+function mountStream(id){
+  const url = 'https://vcloud.hudl.com/broadcast/embed/' + id + '?autoplay=1';
+  stage.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.src = url;
+  f.allow = 'autoplay; fullscreen; picture-in-picture';
+  f.allowFullscreen = true;
+  f.title = 'Lumberjacks live stream';
+  stage.appendChild(f);
+  say('Broadcast ' + id);
+}
 
-  if(STREAM_TYPE === 'iframe'){
-    const f = document.createElement('iframe');
-    f.src = STREAM_URL;
-    f.allow = 'autoplay; fullscreen; picture-in-picture';
-    f.allowFullscreen = true;
-    f.title = 'Lumberjacks live stream';
-    setup.remove();
-    stage.appendChild(f);
-    say('Embed loaded.');
-    return true;
-  }
-
-  const v = document.createElement('video');
-  v.controls = true;
-  v.autoplay = true;
-  v.playsInline = true;
-  v.muted = true;            // required, or Chrome refuses to autoplay
-  setup.remove();
-  stage.appendChild(v);
-
-  // Unmute button, since we have to start muted.
-  const un = document.createElement('button');
-  un.textContent = 'Tap for sound';
-  un.style.cssText = 'position:absolute;bottom:52px;left:14px;z-index:5;'+
-    'background:var(--flannel);color:#fff;border:0;border-radius:3px;'+
-    'padding:9px 16px;font:700 13px Inter,sans-serif;cursor:pointer';
-  un.onclick = () => { v.muted = false; v.volume = 1; un.remove(); v.play(); };
-  stage.appendChild(un);
-
-  v.addEventListener('playing', () => say('Playing.'));
-  v.addEventListener('waiting', () => say('Buffering...'));
-
-  if(window.Hls && Hls.isSupported()){
-    say('Requesting the playlist...');
-    const hls = new Hls({ lowLatencyMode:true, manifestLoadingMaxRetry:2 });
-    hls.loadSource(STREAM_URL);
-    hls.attachMedia(v);
-
-    hls.on(Hls.Events.MANIFEST_PARSED, (_, d) => {
-      say('Playlist OK. ' + (d.levels ? d.levels.length : 0) + ' quality level(s). Starting video...');
-      v.play().catch(() => say('Playlist OK, but the browser blocked playback. Press play on the video.'));
-    });
-
-    hls.on(Hls.Events.ERROR, (_, d) => {
-      const det = d.details || 'unknown';
-      if(!d.fatal){ say('Minor hiccup (' + det + '), still trying...'); return; }
-
-      if(d.type === Hls.ErrorTypes.NETWORK_ERROR){
-        if(det.indexOf('manifestLoadError') > -1 || det.indexOf('manifestLoadTimeOut') > -1){
-          showError('Hudl refused the request from this page. This is the CORS block. ' +
-                    'The raw .m3u8 will not work here. Get the iframe embed.');
-        } else {
-          showError('Network error loading the video (' + det + '). ' +
-                    'The link may have expired. Pull a fresh one, or get the iframe embed.');
-        }
-      } else if(d.type === Hls.ErrorTypes.MEDIA_ERROR){
-        showError('Video decoding failed (' + det + '). Try Chrome on a laptop.');
-      } else {
-        showError('Stream failed (' + det + ').');
-      }
-    });
-
-  } else if(v.canPlayType('application/vnd.apple.mpegurl')){
-    say('Using the built-in Safari player...');
-    v.src = STREAM_URL;
-    v.addEventListener('error', () => showError('Safari could not load the stream. Get the iframe embed.'));
-  } else {
-    showError('This browser cannot play the stream. Try Chrome.');
-    return false;
-  }
-  return true;
+// Read live.json so the game can be swapped without touching this file.
+function loadGame(){
+  say('Finding the game...');
+  fetch('./live.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(cfg => {
+      const id = String(cfg.broadcastId || DEFAULT_ID).trim();
+      mountStream(id);
+      if(cfg.label) document.getElementById('gamelabel').textContent = cfg.label;
+    })
+    .catch(() => mountStream(DEFAULT_ID));
 }
 
 function showError(msg){
@@ -318,7 +262,8 @@ function checkLive(){
 setInterval(checkLive, 60000);
 
 checkLive();
-mountStream();
+loadGame();
+document.getElementById('refresh').onclick = loadGame;
 </script>
 </body>
 </html>
