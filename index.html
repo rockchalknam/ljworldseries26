@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch Live | FCA Lumberjacks 13U</title>
+<meta name="description" content="Watch the FCA Lumberjacks 13U live at the Babe Ruth World Series in Jamestown, NY.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+
+<style>
+:root{
+  --bark:#14110F;
+  --pine:#1C2B24;
+  --field:#2D5F3F;
+  --flannel:#C1272D;
+  --sawdust:#E8DFD3;
+  --steel:#8A827A;
+  --line:rgba(232,223,211,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bark);
+  color:var(--sawdust);
+  font-family:'Inter',system-ui,sans-serif;
+  line-height:1.55;
+  min-height:100vh;
+}
+
+/* plaid seam at the very top */
+.seam{
+  height:6px;
+  background:repeating-linear-gradient(90deg,
+    var(--flannel) 0 22px, var(--bark) 22px 26px,
+    var(--field) 26px 48px, var(--bark) 48px 52px);
+}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 72px}
+
+/* ---------- header ---------- */
+header{padding:28px 0 22px;border-bottom:1px solid var(--line)}
+.eyebrow{
+  font-family:'Roboto Mono',monospace;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--steel);
+}
+h1{
+  font-family:'Anton',Impact,sans-serif;
+  font-size:clamp(30px,7vw,54px);
+  line-height:.95;letter-spacing:.01em;text-transform:uppercase;
+  margin:6px 0 0;
+}
+h1 span{color:var(--flannel)}
+
+/* ---------- live bar ---------- */
+.livebar{
+  display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;
+  padding:14px 0;border-bottom:1px solid var(--line);
+}
+.onair{display:flex;align-items:center;gap:8px;
+  font-family:'Roboto Mono',monospace;font-size:12px;
+  letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--flannel);
+  box-shadow:0 0 0 0 rgba(193,39,45,.7);animation:pulse 2s infinite}
+.onair.off .dot{background:var(--steel);animation:none;box-shadow:none}
+@keyframes pulse{
+  70%{box-shadow:0 0 0 11px rgba(193,39,45,0)}
+  100%{box-shadow:0 0 0 0 rgba(193,39,45,0)}
+}
+.clocks{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.clock{text-align:right}
+.clock .zone{font-family:'Roboto Mono',monospace;font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.clock .time{font-family:'Roboto Mono',monospace;font-size:19px;font-weight:700}
+
+/* ---------- player ---------- */
+.stage{margin:22px 0 0;background:#000;border:1px solid var(--line);
+  border-radius:4px;overflow:hidden}
+.ratio{position:relative;width:100%;padding-top:56.25%}
+.ratio > *{position:absolute;inset:0;width:100%;height:100%;border:0}
+video{background:#000;display:block}
+
+.setup{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  padding:26px;text-align:center;background:var(--pine);
+}
+.setup h2{font-family:'Anton',sans-serif;font-size:22px;
+  text-transform:uppercase;letter-spacing:.02em}
+.setup p{max-width:44ch;color:var(--steel);font-size:14px}
+.setup code{font-family:'Roboto Mono',monospace;font-size:13px;
+  background:rgba(0,0,0,.4);padding:2px 6px;border-radius:3px;color:var(--sawdust)}
+
+.btn{
+  display:inline-block;background:var(--flannel);color:#fff;
+  font-weight:700;font-size:14px;letter-spacing:.02em;
+  padding:12px 24px;border-radius:3px;text-decoration:none;
+  transition:transform .12s ease,background .12s ease;
+}
+.btn:hover{background:#a51f24;transform:translateY(-1px)}
+.btn:focus-visible{outline:3px solid var(--sawdust);outline-offset:2px}
+
+.stagenote{padding:11px 14px;font-size:13px;color:var(--steel);
+  border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px}
+.stagenote a{color:var(--sawdust)}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--steel)}
+footer a{color:var(--sawdust)}
+
+@media (max-width:560px){
+  .clocks{margin-left:0;width:100%;justify-content:flex-start}
+  .clock{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="seam"></div>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Babe Ruth World Series &middot; Jamestown, NY</div>
+  <h1>Lumberjacks <span>Live</span></h1>
+</header>
+
+<div class="livebar">
+  <div class="onair off" id="onair"><span class="dot"></span><span id="onairtext">Stream offline</span></div>
+  <div class="clocks">
+    <div class="clock"><div class="zone">Jamestown</div><div class="time" id="clockET">--:--</div></div>
+    <div class="clock"><div class="zone">Ridgefield</div><div class="time" id="clockPT">--:--</div></div>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="ratio" id="stage">
+    <div class="setup" id="setup">
+      <h2>Watch on JockJive</h2>
+      <p>Every Lumberjacks game is streamed live by JockJive. One pass covers the whole tournament. Game times below are Pacific.</p>
+      <a class="btn" id="fallbackBtn" href="https://www.jockjive.com/baberuthny26.html" target="_blank" rel="noopener">Watch on JockJive &rarr;</a>
+    </div>
+  </div>
+  <div class="stagenote">
+    <span id="status" style="font-family:'Roboto Mono',monospace;color:var(--sawdust)">Starting up...</span>
+    <span>Stream provided by JockJive Sports Network.</span>
+    <span><a href="https://www.jockjive.com/baberuthny26.html" target="_blank" rel="noopener">Open the game on JockJive &rarr;</a></span>
+  </div>
+</div>
+
+
+
+<footer>
+  Go Lumberjacks. Questions about the stream, text the team thread.
+  <a href="./index.html">Back to the family hub</a>
+</footer>
+
+</div>
+
+<script>
+/* ================================================================
+   CONFIG — this is the only part you need to touch.
+   ================================================================ */
+
+// How the stream is delivered. Two options:
+//   'iframe' — JockJive gave you an embed URL or an <iframe src="...">
+//   'hls'    — you grabbed a .m3u8 link from the Network tab
+const STREAM_TYPE = 'iframe';
+
+// Hudl embed. For a NEW GAME, swap the number (4151108) for that game's
+// broadcast ID. Everything else in the URL stays the same.
+const STREAM_URL = 'https://vcloud.hudl.com/broadcast/embed/4151108?autoplay=1';
+
+// Where people go if the embed fails. Put the direct JockJive game page here.
+const JOCKJIVE_PAGE = 'https://www.jockjive.com/baberuthny26.html';
+
+// Game windows, Eastern time, only used to light up the ON AIR badge.
+// Format: 'YYYY-MM-DD HH:MM'. Leave empty to keep the badge off.
+const GAMES = [
+  '2026-08-15 13:00',
+  '2026-08-16 10:00',
+  '2026-08-17 16:00',
+  '2026-08-19 13:00',
+  '2026-08-22 12:00'
+];
+
+/* ================================================================
+   Everything below runs itself.
+   ================================================================ */
+
+const stage = document.getElementById('stage');
+const setup = document.getElementById('setup');
+document.getElementById('fallbackBtn').href = JOCKJIVE_PAGE;
+document.querySelectorAll('.stagenote a').forEach(a => a.href = JOCKJIVE_PAGE);
+
+function say(msg){
+  const el = document.getElementById('status');
+  if(el) el.textContent = msg;
+}
+
+function mountStream(){
+  if(!STREAM_URL){ say('Live on JockJive.'); return false; }
+
+  if(STREAM_TYPE === 'iframe'){
+    const f = document.createElement('iframe');
+    f.src = STREAM_URL;
+    f.allow = 'autoplay; fullscreen; picture-in-picture';
+    f.allowFullscreen = true;
+    f.title = 'Lumberjacks live stream';
+    setup.remove();
+    stage.appendChild(f);
+    say('Embed loaded.');
+    return true;
+  }
+
+  const v = document.createElement('video');
+  v.controls = true;
+  v.autoplay = true;
+  v.playsInline = true;
+  v.muted = true;            // required, or Chrome refuses to autoplay
+  setup.remove();
+  stage.appendChild(v);
+
+  // Unmute button, since we have to start muted.
+  const un = document.createElement('button');
+  un.textContent = 'Tap for sound';
+  un.style.cssText = 'position:absolute;bottom:52px;left:14px;z-index:5;'+
+    'background:var(--flannel);color:#fff;border:0;border-radius:3px;'+
+    'padding:9px 16px;font:700 13px Inter,sans-serif;cursor:pointer';
+  un.onclick = () => { v.muted = false; v.volume = 1; un.remove(); v.play(); };
+  stage.appendChild(un);
+
+  v.addEventListener('playing', () => say('Playing.'));
+  v.addEventListener('waiting', () => say('Buffering...'));
+
+  if(window.Hls && Hls.isSupported()){
+    say('Requesting the playlist...');
+    const hls = new Hls({ lowLatencyMode:true, manifestLoadingMaxRetry:2 });
+    hls.loadSource(STREAM_URL);
+    hls.attachMedia(v);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, (_, d) => {
+      say('Playlist OK. ' + (d.levels ? d.levels.length : 0) + ' quality level(s). Starting video...');
+      v.play().catch(() => say('Playlist OK, but the browser blocked playback. Press play on the video.'));
+    });
+
+    hls.on(Hls.Events.ERROR, (_, d) => {
+      const det = d.details || 'unknown';
+      if(!d.fatal){ say('Minor hiccup (' + det + '), still trying...'); return; }
+
+      if(d.type === Hls.ErrorTypes.NETWORK_ERROR){
+        if(det.indexOf('manifestLoadError') > -1 || det.indexOf('manifestLoadTimeOut') > -1){
+          showError('Hudl refused the request from this page. This is the CORS block. ' +
+                    'The raw .m3u8 will not work here. Get the iframe embed.');
+        } else {
+          showError('Network error loading the video (' + det + '). ' +
+                    'The link may have expired. Pull a fresh one, or get the iframe embed.');
+        }
+      } else if(d.type === Hls.ErrorTypes.MEDIA_ERROR){
+        showError('Video decoding failed (' + det + '). Try Chrome on a laptop.');
+      } else {
+        showError('Stream failed (' + det + ').');
+      }
+    });
+
+  } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+    say('Using the built-in Safari player...');
+    v.src = STREAM_URL;
+    v.addEventListener('error', () => showError('Safari could not load the stream. Get the iframe embed.'));
+  } else {
+    showError('This browser cannot play the stream. Try Chrome.');
+    return false;
+  }
+  return true;
+}
+
+function showError(msg){
+  stage.innerHTML =
+    '<div class="setup"><h2>Stream unavailable</h2><p>' + msg + '</p>' +
+    '<a class="btn" href="' + JOCKJIVE_PAGE + '" target="_blank" rel="noopener">Watch on JockJive</a></div>';
+  say('Failed.');
+}
+
+/* ---- clocks ---- */
+function tick(){
+  const now = new Date();
+  const fmt = tz => now.toLocaleTimeString('en-US',
+    { timeZone:tz, hour:'numeric', minute:'2-digit' });
+  document.getElementById('clockET').textContent = fmt('America/New_York');
+  document.getElementById('clockPT').textContent = fmt('America/Los_Angeles');
+}
+tick(); setInterval(tick, 15000);
+
+/* ---- live badge ---- */
+function etDate(str){
+  // Treat the config string as Eastern time.
+  const [d,t] = str.split(' ');
+  return new Date(d + 'T' + t + ':00-04:00');
+}
+
+function checkLive(){
+  const now = Date.now();
+  const live = GAMES.some(g => {
+    const t = etDate(g).getTime();
+    return now >= t && now < t + 2.5*60*60*1000;
+  });
+  const bar = document.getElementById('onair');
+  const txt = document.getElementById('onairtext');
+  if(live){ bar.classList.remove('off'); txt.textContent = 'Live now'; }
+  else    { bar.classList.add('off');    txt.textContent = 'Between games'; }
+}
+setInterval(checkLive, 60000);
+
+checkLive();
+mountStream();
+</script>
+</body>
+</html>
