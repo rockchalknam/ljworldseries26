@@ -274,7 +274,7 @@ function checkLive(){
   const bar = document.getElementById('onair');
   const txt = document.getElementById('onairtext');
   if(live){ bar.classList.remove('off'); txt.textContent = 'Live now'; }
-  else    { bar.classList.add('off');    txt.textContent = 'Between games'; }
+  else    { bar.classList.add('off');    txt.textContent = ; }
 }
 setInterval(checkLive, 60000);
 
